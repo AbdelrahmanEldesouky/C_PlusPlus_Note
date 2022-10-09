@@ -3755,11 +3755,3 @@ className arrayName[number_of_objects] = {objectName1, objectName2, ...};
 
 ![Shallow-copy](/image/Shallow-copy.png)![deep-copy](/image/deep-copy.png)
 
-### 
-
-
-
-
-
-
-
