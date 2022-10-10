@@ -3806,3 +3806,32 @@ returnType className::functionMember()
 > - We can't in-class initialize static `char *` member variables.
 > - We can't declare a `non const` static member variable and in-class initialize it.
 > - Sometimes we get things to be in-class initializable by making them `constexpr`.
+> - Static initialization order is not guaranteed. If have static variables that depend on other static variables, we may get crashes for our app if the initialization order doesn’t work in your favor.
+
+> If we mark the member variable as in line, we are telling the compiler to allow the initialization of the static member variable in the class definition.
+>
+> ```c++
+> // class definition
+> 
+> class className 
+> {
+>   public: 
+>     // inline static variable decleration
+>     inline static dataType variableName {}; 
+>     
+>     className() = default; 
+>     className(parm1, parm2); 
+>     returnType functionMember(); 
+>   private: 
+>     // code
+> };
+> ```
+
+Before C++ 17, we couldn't really do much in terms of initializing our member variables in the class declaration if they are static, only integral types `int` and `enum` are initializable from the class declaration, and others have to be initialized in some CPP file and be initialized from there.
+
+![static-member1](/image/static-member1.png)
+
+![static-member2](/image/static-member2.png)
+
+> We have to go through an initializer list if our member variable happens to be a constant, if we don't go through an initializer list and try to do something like this in the body of the constructor, we'll get a compiler error.
+
