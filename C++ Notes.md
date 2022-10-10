@@ -3755,3 +3755,54 @@ className arrayName[number_of_objects] = {objectName1, objectName2, ...};
 
 ![Shallow-copy](/image/Shallow-copy.png)![deep-copy](/image/deep-copy.png)
 
+### Static Members
+
+ Regular member variables are associated with objects, they belong to class objects. What if we need member variables that are not tied to any object, but the class blueprint itself. 
+
+#### Static Member Variables 
+
+Static member variables are not tied to any object of the class. They live in the context of object blueprints. They are created even before a single class object has been created.
+
+We can define class members static using `static` keyword. When we declare a member of a class as static it means no matter how many objects of the class are created, there is only one copy of the static member. A static member is shared by all objects of the class. All static data is initialized to zero when the first object is created, if no other initialization is present. We can't put it in the class definition but it can be initialized outside the class as done in the following example by redeclaring the static variable, using the scope resolution operator `::` to identify which class it belongs to.
+
+```c++
+// class header file
+
+class className 
+{
+  public: 
+    // static variable decleration
+    static dataType variableName ; 
+    
+    className() = default; 
+    className(parm1, parm2); 
+    returnType functionMember(); 
+  private: 
+    // code
+};
+```
+
+```c++
+// class source file 
+
+#include "className.h"
+
+// static variable initialization  
+dataType className::variableName {} ; 
+
+className::className(parm1, parm2)
+{
+    // code
+}
+
+returnType className::functionMember()
+{
+    // code
+}
+```
+
+> - Non integral static member variables, be it `const` or `non const` can't be in-class initialized. That's forbidden by the C++ standard.
+> -  If the floating point static member variable is marked `const`, it can be in-class initialized.
+> - We can't in-class initialize static `char *` member variables.
+> - We can't declare a `non const` static member variable and in-class initialize it.
+> - Sometimes we get things to be in-class initializable by making them `constexpr`.
