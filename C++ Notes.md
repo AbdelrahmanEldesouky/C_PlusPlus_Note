@@ -3835,3 +3835,55 @@ Before C++ 17, we couldn't really do much in terms of initializing our member va
 
 > We have to go through an initializer list if our member variable happens to be a constant, if we don't go through an initializer list and try to do something like this in the body of the constructor, we'll get a compiler error.
 
+#### Static Member Functions 
+
+A static member function can be called even if no objects of the class exist and the **static** functions are accessed using only the class name and the scope resolution operator `::`. A static member function can only access static data member, other static member functions and any other functions from outside the class. Static member functions have a class scope and they do not have access to the `this` pointer of the class. We could use a static member function to determine whether some objects of the class have been created or not.
+
+```c++
+className::functionName (parm1, parm2);  
+```
+
+> - We can't use `const` keyword with `static` keyword.
+> - Static member functions are allowed to access only the static data members or other static member functions, they can not access the non-static data members or member functions of the class. `const` member functions pledge to never modify the members of a class, but static member functions don't have access to object member variables, so marking them `const` doesn't make any sense. The compiler forbids that and if we do that you'll get a compiler error.
+> - Static member functions have no business accessing member variables. They then have no business accessing the `this` pointer, whose purpose is to allow us to manipulate members of the current object. The compiler forbids that and if we try to use the this pointer in a static method, you'll get a hard compiler error.
+
+### Nested Class
+
+A nested class is a class which is declared in another enclosing class. A nested class is a member and as such has the same access rights as any other member. The members of an enclosing class have no special access to members of a nested class; the usual access rules shall be obeyed.
+
+```c++
+#include<iostream>
+
+/* start of Enclosing class declaration */
+class Enclosing 
+{	
+    private:
+        int x;
+
+        /* start of Nested class declaration */
+        class Nested 
+        {
+            int y;
+            void NestedFun(Enclosing *e) 
+            {
+                cout<<e->x; // works fine: nested class can access
+                            // private members of Enclosing class
+            }	
+        }; // declaration Nested class ends here
+}; // declaration Enclosing class ends here
+
+int main()
+{	
+
+}
+```
+
+> - When Inner is private, its objects can’t be created from the outside, like in `main()`.
+> - Outer doesn’t have access to private section of Inner.
+> - Inner has access to private section of Outer.
+> - Inner can directly access static members of Outer, but can’t access member variables without going through an object.
+
+## Namespace 
+
+
+
