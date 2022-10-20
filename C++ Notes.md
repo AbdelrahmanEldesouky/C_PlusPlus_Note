@@ -3883,7 +3883,144 @@ int main()
 > - Inner has access to private section of Outer.
 > - Inner can directly access static members of Outer, but can’t access member variables without going through an object.
 
-## Namespace 
+## Namespaces
+
+A facility in the C++ programming language to avoid name conflicts: 
+
+- Namespace provide the space where we can define or declare identifier i.e. variable,  method, classes.
+- Using namespace, you can define the space or context in which identifiers are defined i.e. variable, method, classes. In essence, a namespace defines a scope.
+
+> **Advantage of Namespace to avoid name collision:**
+>
+> - Example, you might be writing some code that has a function called `xyz()` and there is another library available which is also having same function `xyz()`. Now the compiler has no way of knowing which version of `xyz()` function you are referring to within your code.
+> - A namespace is designed to overcome this difficulty and is used as additional information to differentiate similar functions, classes, variables etc. with the same name available in different libraries. 
+> - The best example of namespace scope is the C++ standard library (`std`) where all the classes, methods and templates are declared. Hence while writing a C++ program we usually include the directive using namespace `std`. 
+
+### Declaration
+
+```c++
+namespace  namespaceName 
+{
+    // code declarations i.e. variable  (int a;)
+    returnType functionName();
+    classes ( class className{};)
+}
+```
+
+To call the namespace-enabled version of either function or variable, prepend the namespace name as follows:
+
+```c++
+namespaceName::code ;  // code could be variable , function or class.
+```
+
+> We can use a **Default Global Namespace** by flag it with `::` resolution operator. 
+>
+> ```c++
+> // Global Scope
+> returnType functionName();
+> // Namespace Scope
+> namespace  namespaceName 
+> {
+>     // code declarations i.e. variable  (int a;)
+>     returnType functionName();
+>     classes ( class className{};)
+> }
+> 
+> int main()
+> {
+>     namespaceName::functionName() ; // namespace scope
+>     ::functionName() ; // global scope
+> }
+> ```
+
+### Nested Namespaces
+
+Namespaces can be nested where you can define one namespace inside another name space as follows:
+
+```c++
+namespace namespaceName 
+{
+    // code declarations
+    namespace namespaceNameNested 
+    {
+        // code declarations
+    }
+}
+```
+
+We can access members of nested namespace by using `::` operator as follows:
+
+```c++
+// to access members of namespaceNameNested
+using namespace namespaceName::namespaceNameNested;
+// to access members of namespaceName
+using namespace namespaceName;
+```
+
+### Namespaces Across Multiple Files
+
+We can split our `namespace` across multiple files as follows: 
+
+```c++
+// namespace header file
+
+namespace namespaceName
+{
+    class className 
+    {
+      public: 
+        className() = default; 
+        className(parm1, parm2); 
+        returnType functionMember(); 
+      private: 
+        // code
+    };
+}
+```
+
+```c++
+// namespace source file
+#include "className.h"
+
+namespace namespaceName
+{
+    className::className(parm1, parm2)
+    {
+        // code
+    }
+
+    returnType className::functionMember()
+    {
+        // code
+    }
+}
+```
+
+### `using` Namespaces 
+
+We can also avoid prepending of namespaces with the `using` namespace directive. This directive tells the compiler that the subsequent code is making use of names in the specified namespace. Names introduced in a using directive obey normal scope rules. The name is visible from the point of the using directive to the end of the scope in which the directive is found. Entities with the same name defined in an outer scope are hidden.
+
+```c++
+using namespace namespaceName ; 
+
+// or 
+using namespace namespaceName::memberName ; 
+
+// using Namespace alias
+namespace anotherName = namespaceName ; 
+```
+
+### Anonymous Namespaces 
+
+- When the compiler sees an anonymous namespace declaration it will generate an internal name for the namespace.
+- The generated unique namespace name is not accessible to the developer.
+- There can only be one anonymous namespace for a single translation unit. If we set up multiple anonymous namespace blocks, they’ll just be extensions to the first one.
+- Anonymous namespaces in different translation units are completely separate though, the compiler generates different unique namespace names for them behind the scenes.
+- Because we don’t have access to the compiler generated namespace name for anonymous namespaces, names declared inside anonymous namespaces are only reachable/usable in the TU where they were declared.
+
+> Names in an anonymous namespace are only reachable/usable from the TU where they were declared/defined.
+
+
 
 
 
