@@ -3543,7 +3543,7 @@ We can use two types of functions to access the class member for reading or edit
 2. **Getter** 
 
    ```c++
-   returnType className::set_variableName()
+   returnType className::get_variableName()
    {
        return variableName ;
    }
