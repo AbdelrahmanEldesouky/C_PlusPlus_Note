@@ -4020,6 +4020,180 @@ namespace anotherName = namespaceName ;
 
 > Names in an anonymous namespace are only reachable/usable from the TU where they were declared/defined.
 
+## Smart Pointers 
+
+As we’ve known not deallocating a pointer causes a memory leak that may lead to crash of the program. A Smart Pointer is a wrapper class over a pointer with an operator like`*` and `->` overloaded. The objects of the smart pointer class look like normal pointers. But, unlike Normal Pointers it can deallocate and free destroyed object memory. 
+
+> - The idea is to take a class with a pointer, destructor, and overloaded operators like `*` and `->`. Since the destructor is automatically called when an object goes out of scope, the dynamically allocated memory would automatically be deleted.
+> - `<memory>` library used to handle smart pointer. 
+
+### Types of Smart Pointers 
+
+#### Unique Pointer
+
+`unique_ptr` stores one pointer only. We can assign a different object by removing the current object from the pointer.
+
+![uniquePtr](image/uniquePtr.png)
+
+```c++
+// Create new unique ptr
+std::unique_ptr<Data_Type> ptr_Name {new Data_Type(Value)};
+
+//  Manage a previously allocated ptr
+Data_Type * ptr_Name1 = new Data_Type(Value);
+std::unique_ptr<Data_Type> ptr_Name2{ptr_Name1};
+
+// Initialize with nullptr
+std::unique_ptr<Data_Type> ptr_Name {nullptr};
+
+// using make_unique syntax. Calls new internally for us, we don't have to do it ourselves
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+
+// Copies and Assignments are not allowed with unique ptr
+std::unique_ptr<Data_Type> ptr_Name1 = ptr_Name2 ; // Error.This does some kind of copy
+
+//Can move the pointer ownership. 
+std::unique_ptr<Data_Type> ptr_Name1 = std::make_unique<Data_Type>(ptr_Name2);
+std::unique_ptr<Data_Type> ptr_Name2 = std::move(ptr_Name1); 
+
+//Can reset unique ptr : releases memory and sets the pointer to nullptr
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+ptr_Name.reset() ;
+
+/******* Passing and Returning unique ptr to functions *******/
+// 1. Pass unique_ptr by value
+fun(unique_ptr_Name) ; // Error.This does some kind of copy
+
+// 2. Pass by move the pointer ownership
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+fun(std::move(ptr_Name)) ; // Ownership will move to the body of the function and memory will be released when function returns.
+
+// 3. Pass unique_ptr by reference
+void fun(const std::unique_ptr<Data_Type> & ptr_Name)
+{
+    ptr_Name->do_somthing() ; 
+    ptr_Name.reset() ; // Compiler error
+}
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+fun(ptr_Name) ; // Ownership won't move to the body of the function and memory won't be released when function returns.
+
+// 4. Returning unique ptr from function by value
+std::unique_ptr<Data_Type> get_unique_ptr()
+{
+    std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+	ptr_Name->do_somthing() ; 
+    return ptr_Name;  // The compiler does some optimizations and doesn't return a copy here
+					// it's returning something like a reference to the local object.
+					// We can prove this by looking at the address of objects in memory.
+					// This is not standard behavior, some compilers may actually return 
+					// by value by making a copy. The compilers have some freedom to choose
+					// their own way to do things.
+}
+std::unique_ptr<Data_Type> ptr_Name = get_unique_ptr() ;
+
+/******* Smart Pointers and Arrays *******/
+// 1. using unique_ptr
+std::unique_ptr<Data_Type[]> arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
+// or 
+auto arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
+
+// 2. using make_unique
+std::unique_ptr<Data_Type[]> arr_ptr = std::make_unique<Data_Type[]> (3);
+// or 
+auto arr_ptr = std::make_unique<Data_Type[]> (3); // Works but can't initialize individual elements
+auto arr_ptr = std::make_unique<Data_Type[]> (3) {value1, value2 , value3} //Compiler error
+auto arr_ptr = std::make_unique<Data_Type[]> {value1, value2 , value3} //Compiler error
+```
+
+#### Shared Pointer
+
+`shared_ptr` more than one pointer can point to this one object at a time and it’ll maintain a Reference Counter using `use_count()` method.
+
+![sharedptr](image/sharedptr.png)
+
+
+
+```c++
+// Create new shared ptr
+std::shared_ptr<Data_Type> ptr_Name {new Data_Type(Value)};
+
+//  Manage a previously allocated ptr
+Data_Type * ptr_Name1 = new Data_Type(Value);
+std::shared_ptr<Data_Type> ptr_Name2{ptr_Name1};
+
+// Initialize with nullptr
+std::shared_ptr<Data_Type> ptr_Name {nullptr};
+
+// using make_shared syntax. Calls new internally for us, we don't have to do it ourselves
+std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
+
+// Copies and Assignments are allowed with shared ptr
+std::shared_ptr<Data_Type> ptr_Name1 = ptr_Name2 ; // use_count = 2
+
+//Copying
+std::shared_ptr<Data_Type> ptr_Name1 ;
+ptr_Name3 = ptr_Name1 ; // use_count = 3
+// or 
+std::shared_ptr<Data_Type> ptr_Name4 {nullptr};
+ptr_Name4 = ptr_Name1 ; // use_count = 4
+// or 
+std::shared_ptr<Data_Type> ptr_Name5 {ptr_Name1};
+
+//Can reset shared ptr : decrement use_count
+std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
+ptr_Name.reset() ; // use_count-- 
+
+/******* Passing and Returning unique ptr to functions *******/
+// 1. Pass unique_ptr by value
+fun(unique_ptr_Name) ; // Error.This does some kind of copy
+
+// 2. Pass by move the pointer ownership
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+fun(std::move(ptr_Name)) ; // Ownership will move to the body of the function and memory will be released when function returns.
+
+// 3. Pass unique_ptr by reference
+void fun(const std::unique_ptr<Data_Type> & ptr_Name)
+{
+    ptr_Name->do_somthing() ; 
+    ptr_Name.reset() ; // Compiler error
+}
+std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+fun(ptr_Name) ; // Ownership won't move to the body of the function and memory won't be released when function returns.
+
+// 4. Returning unique ptr from function by value
+std::unique_ptr<Data_Type> get_unique_ptr()
+{
+    std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+	ptr_Name->do_somthing() ; 
+    return ptr_Name;  // The compiler does some optimizations and doesn't return a copy here
+					// it's returning something like a reference to the local object.
+					// We can prove this by looking at the address of objects in memory.
+					// This is not standard behavior, some compilers may actually return 
+					// by value by making a copy. The compilers have some freedom to choose
+					// their own way to do things.
+}
+std::unique_ptr<Data_Type> ptr_Name = get_unique_ptr() ;
+
+/******* Smart Pointers and Arrays *******/
+// 1. using unique_ptr
+std::unique_ptr<Data_Type[]> arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
+// or 
+auto arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
+
+// 2. using make_unique
+std::unique_ptr<Data_Type[]> arr_ptr = std::make_unique<Data_Type[]> (3);
+// or 
+auto arr_ptr = std::make_unique<Data_Type[]> (3); // Works but can't initialize individual elements
+auto arr_ptr = std::make_unique<Data_Type[]> (3) {value1, value2 , value3} //Compiler error
+auto arr_ptr = std::make_unique<Data_Type[]> {value1, value2 , value3} //Compiler error
+```
+
+
+
+
+
+
+
 
 
 
