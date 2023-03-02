@@ -4027,9 +4027,13 @@ As we’ve known not deallocating a pointer causes a memory leak that may lead t
 > - The idea is to take a class with a pointer, destructor, and overloaded operators like `*` and `->`. Since the destructor is automatically called when an object goes out of scope, the dynamically allocated memory would automatically be deleted.
 > - `<memory>` library used to handle smart pointer. 
 
-### Types of Smart Pointers 
+There's three types of smart pointers: 
 
-#### Unique Pointer
+1. Unique Pointer
+2. Shared Pointer
+3. Weak Pointer
+
+### Unique Pointer
 
 `unique_ptr` stores one pointer only. We can assign a different object by removing the current object from the pointer.
 
@@ -4105,13 +4109,11 @@ auto arr_ptr = std::make_unique<Data_Type[]> (3) {value1, value2 , value3} //Com
 auto arr_ptr = std::make_unique<Data_Type[]> {value1, value2 , value3} //Compiler error
 ```
 
-#### Shared Pointer
+### Shared Pointer
 
 `shared_ptr` more than one pointer can point to this one object at a time and it’ll maintain a Reference Counter using `use_count()` method.
 
 ![sharedptr](image/sharedptr.png)
-
-
 
 ```c++
 // Create new shared ptr
@@ -4130,7 +4132,7 @@ std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
 // Copies and Assignments are allowed with shared ptr
 std::shared_ptr<Data_Type> ptr_Name1 = ptr_Name2 ; // use_count = 2
 
-//Copying
+// Copying
 std::shared_ptr<Data_Type> ptr_Name1 ;
 ptr_Name3 = ptr_Name1 ; // use_count = 3
 // or 
@@ -4139,54 +4141,112 @@ ptr_Name4 = ptr_Name1 ; // use_count = 4
 // or 
 std::shared_ptr<Data_Type> ptr_Name5 {ptr_Name1};
 
-//Can reset shared ptr : decrement use_count
+// Can reset shared ptr : decrement use_count
 std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
 ptr_Name.reset() ; // use_count-- 
 
+// Create shared pointers from unique_ptrs : // Ownership moves from unique_ptrs to shared_ptrs from now on
+std::unique_ptr<Data_Type> unique_ptr_Name = std::make_unique<Data_Type>(Value) ;
+std::shared_ptr<Data_Type> shared_ptr_Name = std::move(unique_ptr_Name); 
+std::shared_ptr<Data_Type> shared_ptr_Name = unique_ptr_Name; // Error: Direct assignment 
+													     // Doesn't work, must do an explicit std::move to move ownership
+
+// Can't transform from std::shared_ptr to std::unique_ptr
+std::unique_ptr<Data_Type> unique_ptr_Name {shared_ptr_Name} ; // Compiler error
+/* 	The reason this transformation is disabled isn't hard to think of.
+	At any given moment, there may be any number of shared pointers 
+	spread through your entire application working on the same object, 
+	If you were to instantly make one of those a unique ptr. 
+	What do you do with the remaining copies?. 
+	Unique ptr can't have copies anyway. So the compiler prevents you from doing this.
+*/
+
+// Returning unique_ptr to shared_ptr
+std::shared_ptr<Data_Type> shared_ptr_Name = get_unique_ptr(); // This implicitly moves and use_count++
+
 /******* Passing and Returning unique ptr to functions *******/
-// 1. Pass unique_ptr by value
-fun(unique_ptr_Name) ; // Error.This does some kind of copy
-
-// 2. Pass by move the pointer ownership
-std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
-fun(std::move(ptr_Name)) ; // Ownership will move to the body of the function and memory will be released when function returns.
-
-// 3. Pass unique_ptr by reference
-void fun(const std::unique_ptr<Data_Type> & ptr_Name)
+// 1. Pass shared_ptr by value
+			// use_count = 1
+void fun1 (std::shared_ptr<Data_Type> shared_ptr_Name)
 {
-    ptr_Name->do_somthing() ; 
-    ptr_Name.reset() ; // Compiler error
+    shared_ptr_Name->do_somthing() ; // use_count = 2
 }
-std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
-fun(ptr_Name) ; // Ownership won't move to the body of the function and memory won't be released when function returns.
+			// use_count = 1
 
-// 4. Returning unique ptr from function by value
-std::unique_ptr<Data_Type> get_unique_ptr()
+// 2. Pass shared_ptr by non const ref
+			// use_count = 1
+void fun2 (std::shared_ptr<Data_Type> & shared_ptr_Name)
 {
-    std::unique_ptr<Data_Type> ptr_Name = std::make_unique<Data_Type>(Value) ;
+    shared_ptr_Name->do_somthing() ; // use_count = 1
+    shared_ptr_Name.reset() ; // non protected pointer because of non const ref
+}
+			// use_count = 1
+
+// 3. Pass shared_ptr by const ref
+			// use_count = 1
+void fun2 (const std::shared_ptr<Data_Type> & shared_ptr_Name)
+{
+    shared_ptr_Name->do_somthing() ; // use_count = 1
+    shared_ptr_Name.reset() ;  // Compiler error because of const ref
+}
+			// use_count = 1
+
+// 4. Returning shared_ptr from function by value
+std::shared_ptr<Data_Type> get_shared_ptr()
+{
+    std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
 	ptr_Name->do_somthing() ; 
     return ptr_Name;  // The compiler does some optimizations and doesn't return a copy here
 					// it's returning something like a reference to the local object.
-					// We can prove this by looking at the address of objects in memory.
-					// This is not standard behavior, some compilers may actually return 
-					// by value by making a copy. The compilers have some freedom to choose
-					// their own way to do things.
 }
-std::unique_ptr<Data_Type> ptr_Name = get_unique_ptr() ;
+std::shared_ptr<Data_Type> ptr_Name = get_shared_ptr() ; // use_count = 1
+
+// 5. Returning shared_ptr from function by ref (const or non const)
+////RETURNING SHARED_PTR BY REF( CONST OR NON CONST) IS A RECIPE FOR DISASTER. DON'T DO IT.
+//returning std::shared_ptr by reference doesn't properly increment the reference count,
+// which opens up the risk of deleting something at the wrong time. We'll get a crash
+std::shared_ptr<Data_Type> get_shared_ptr()
+{
+    std::shared_ptr<Data_Type> ptr_Name = std::make_shared<Data_Type>(Value) ;
+	ptr_Name->do_somthing() ; 
+    return ptr_Name;  // The compiler does some optimizations and doesn't return a copy here
+					// it's returning something like a reference to the local object.
+}
+std::shared_ptr<Data_Type> ptr_Name = get_shared_ptr() ; // use_count = 0
 
 /******* Smart Pointers and Arrays *******/
-// 1. using unique_ptr
-std::unique_ptr<Data_Type[]> arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
-// or 
-auto arr_ptr = std::unique_ptr<Data_Type[]> (new Data_Type[arrr_size]{value1, value2 , value3});
+// 1. using shared_ptr
+std::shared_ptr<Data_Type[]> arr_ptr (new Data_Type[arrr_size]{value1, value2 , value3});
 
-// 2. using make_unique
-std::unique_ptr<Data_Type[]> arr_ptr = std::make_unique<Data_Type[]> (3);
-// or 
-auto arr_ptr = std::make_unique<Data_Type[]> (3); // Works but can't initialize individual elements
-auto arr_ptr = std::make_unique<Data_Type[]> (3) {value1, value2 , value3} //Compiler error
-auto arr_ptr = std::make_unique<Data_Type[]> {value1, value2 , value3} //Compiler error
+// 2. using make_shared: make_shared syntax isn't supported yet for raw arrays. Some compilers do offer
+
+// 3. Read from array
+std::cout << arr_ptr[index] << std::endl;
+
+// 4. Setting elements
+arr_ptr[index] = value ;
 ```
+
+### Weak Pointer
+
+It’s much more similar to `shared_ptr` except it’ll not maintain a Reference Counter. In this case, a pointer will not have a stronghold on the object. The reason is if suppose pointers are holding the object and requesting for other objects then they may form a Deadlock. 
+
+![weakPtr](image/weakPtr.png)
+
+A `weak_ptr` is created as a copy of `shared_ptr`. It provides access to an object that is owned by one or more `shared_ptr` instances but does not participate in reference counting. The existence or destruction of `weak_ptr` has no effect on the `shared_ptr` or its other copies. It is required in some cases to break circular references between `shared_ptr` instances.
+
+**Cyclic Dependency (Problems with shared_ptr):** Let’s consider a scenario where we have two classes A and B, both have pointers to other classes. So, it’s always like A is pointing to B and B is pointing to A. Hence, use_count will never reach zero and they never get deleted.
+
+![weakPtrex1](image/weakPtrex1.png)
+
+This is the reason we use `weak_ptr` as they are not reference counted. So, the class in which `weak_ptr` is declared doesn’t have a stronghold of it. the ownership isn’t shared, but they can have access to these objects.
+
+![weakPtrex2](image/weakPtrex2.png)
+
+So, in case of `shared_ptr`because of cyclic dependency use_count never reaches zero which is prevented using `weak_ptr`, which removes this problem by declaring `A_ptr` as `weak_ptr`, thus class A does not own it, only have access to it and we also need to check the validity of object as it may go out of scope. In general, it is a design issue.
+
+>**When to use `weak_ptr`?**
+>When you do want to refer to your object from multiple places – for those references for which it’s ok to ignore and deallocate (so they’ll just note the object is gone when you try to dereference).
 
 
 
