@@ -4248,6 +4248,427 @@ So, in case of `shared_ptr`because of cyclic dependency use_count never reaches 
 >**When to use `weak_ptr`?**
 >When you do want to refer to your object from multiple places – for those references for which it’s ok to ignore and deallocate (so they’ll just note the object is gone when you try to dereference).
 
+## Operator Overloading 
+
+In C++, we can make operators work for user-defined classes. This means C++ has the ability to provide the operators with a special meaning for a data type, this ability is known as operator overloading. For example, we can overload an operator ‘+’ in a class like String so that we can concatenate two strings by just using +. Other example classes where arithmetic operators may be overloaded are Complex Numbers, Fractional Numbers, Big Integer, etc.
+
+Operator overloading is a compile-time polymorphism. It is an idea of giving special meaning to an existing operator in C++ without changing its original meaning.
+
+![operatorOverloading](image/operatorOverloading.png)
+
+### Addition Operator as Member
+
+```c#
+// Point.h 
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+
+        //Member
+        Point operator+(const Point& right_operand)
+        {
+            return Point(this->m_x + right_operand.m_x , this->m_y + right_operand.m_y);
+        }
+
+       void print_info()
+       {
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+
+    private : 
+        double m_x{};
+        double m_y{};
+};
+```
+
+```c++
+// main.cpp
+#include "point.h"
+
+int main()
+{
+    Point p1(10,10);
+    Point p2(20,20);
+    Point p3{p1 + p2}; // p1.operator+(p2)
+
+    Point p4{p2 + Point(5,5)}; // p2.operator+(Point(5,5))
+    
+    p3.print_info();
+    p4.print_info();
+
+    (Point(20,20) + Point(10,10)).print_info(); //(Point(20,20)).operator+(Point(10,10))
+    
+    return 0;
+}
+```
+
+### Addition Operator as Non-Member
+
+```c#
+// Point.h 
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+    
+       friend Point operator+(const Point& left_operand, const Point& right_operand); 
+       void print_info()
+       {
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+
+    private : 
+        double m_x{};
+        double m_y{};
+};
+
+//Non Member
+inline Point operator+(const Point& left_operand, const Point& right_operand)
+{
+    return Point(left_operand.m_x + right_operand.m_x ,left_operand.m_y + right_operand.m_y);
+}
+```
+
+```c++
+// main.cpp
+#include "point.h"
+
+int main()
+{
+    Point p1(10,10);
+    Point p2(20,20);
+    //Point p3{p1 + p2}; // opearator+(p1,p2);
+    Point p3{operator+ (p1,p2)};
+
+    Point p4{p2 + Point(5,5)};
+    
+    p3.print_info();
+    p4.print_info();
+
+    (Point(20,20) + Point(10,10)).print_info();
+    
+    return 0;
+}
+```
+
+### Subscript Operator for Reading
+
+```c#
+// Point.h 
+#include <cassert> // for using assert() to chech the input data in run time
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+    
+       double operator[](size_t index) const
+       {
+           	assert( (index == 0) || (index == 1));
+            if(index == 0)
+            {
+                return m_x;
+            }
+           else
+           {
+                return m_y;
+            }
+       }
+    
+       void print_info()
+       {
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+
+    private : 
+        double m_x{};
+        double m_y{};
+};
+```
+
+```c++
+// main.cpp
+#include <iostream>
+#include "point.h"
+
+int main()
+{
+    Point p1(10,20);
+    std::cout << "p1.x : " << p1[0] << std::endl; // x coordinate : 10
+    std::cout << "p1.x : " << p1.operator[](0) << std::endl; // x coordinate : 10
+    std::cout << "p1.y : " << p1[1] << std::endl; // y coordinate : 20
+    return 0;
+}
+return 0;
+}
+```
+
+### Subscript Operator for Reading and Writing
+
+> To use the Subscript Operator for Reading and Writing, we just change the operator function to return as reference `&` 
+
+```c#
+// Point.h 
+#include <cassert> // for using assert() to chech the input data in run time
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+    
+       double& operator[](size_t index)
+       {
+           	assert( (index == 0) || (index == 1));
+            if(index == 0)
+            {
+                return m_x;
+            }
+           else
+           {
+                return m_y;
+            }
+       }
+    
+       void print_info()
+       {
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+
+    private : 
+        double m_x{};
+        double m_y{};
+};
+```
+
+```c++
+// main.cpp
+#include <iostream>
+#include "point.h"
+
+int main(){
+
+    Point p1(10,20);
+
+    p1.print_info();
+
+    //Changing the data
+    p1[0] = 35.6;
+    p1[1] = 23.9;
+
+    p1.print_info();
+    return 0;
+}
+```
+
+### Stream Insertion Operation Operator
+
+```c#
+// Point.h 
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+
+        void print_info(){
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+    
+        friend std::ostream& operator<<(std::ostream& os, const Point& p);
+
+        /* we usually don't use this because the first operand is the member itself
+        std::ostream& operator<< (std::ostream& os)
+        {
+            os << "Point [ x : " << m_x << ", y : " << m_y << "]";
+            return os;			
+        }
+        */
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Point& p)
+{
+	os << "Point [ x : " << p.m_x << ", y : " << p.m_y << "]";	
+	return os;
+}
+```
+
+```c++
+// main.cpp
+#include <iostream>
+#include "point.h"
+
+int main()
+{
+    Point p1(10,20);
+    Point p2(3,4);
+    
+    // p1 << std::cout (operator as member function)
+    
+    std::cout << p1 << p2 << std::endl; // as print_info()
+   
+    return 0;
+}
+```
+
+### Stream Extraction Operator
+
+```c#
+// Point.h 
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+        ~Point() = default;
+
+        void print_info(){
+            std::cout << "Point [ x : " << m_x << ", y : " << m_y << "]" << std::endl;
+        }
+    
+        friend std::ostream& operator<<(std::ostream& os, const Point& p);
+
+        /* we usually don't use this because the first operand is the member itself
+        std::istream& operator<<(std::istream& is)
+        {
+            double x , y ; 
+            is >> x >> y ; 
+            m_x = x ; 
+            m_y = y ; 
+            return is;
+        }
+        */
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+inline std::istream& operator<<(std::istream& is, const Point& p)
+{
+	double x , y ; 
+    is >> x >> y ; 
+    p.m_x = x ; 
+    p.m_y = y ; 
+	return is;
+}
+```
+
+```c++
+// main.cpp
+#include <iostream>
+#include "point.h"
+
+int main()
+{
+    Point p2;
+    std::cin >> p2;//
+    std::cout << "p2 : " << p2 << std::endl;
+}
+```
+
+### Compound Operators 
+
+```c#
+// Point.h 
+inline Point operator+= (const Point& left_operand, const Point& right_operand)
+{
+    left_operand.m_x += right_operand.m_x ;
+    left_operand.m_y += right_operand.m_y ;
+    return left_operand ;
+}
+
+inline Point operator-= (const Point& left_operand, const Point& right_operand)
+{
+    left_operand.m_x += right_operand.m_x ;
+    left_operand.m_y += right_operand.m_y ;
+    return left_operand ;
+}
+
+inline Point operator+ (const Point& left_operand, const Point& right_operand) // another way to implement + using +=
+{
+    Point p(left_operand.m_x , left_operand.m_y)
+    return p += right_operand ;
+}
+
+inline Point operator- (const Point& left_operand, const Point& right_operand) // another way to implement - using -=
+{
+    Point p(left_operand.m_x , left_operand.m_y)
+    return p -= right_operand ;
+}
+```
+
+### Conversions Operators 
+
+> - Overloaded conversion operators must be a member method.
+> - We can use the `explicit ` keyword to avoid implicit cast by the compiler, then explicitly cast every data type to be used. 
+> - When a binary operator is implemented as a member function, the left operand is never implicitly converted.
+
+```c++
+#include <iostream>
+class Number
+{
+   public:
+	Number() = default;
+	Number(int value );
+     ~Number();
+
+    explicit operator double() const
+    {
+        return (static_cast <double> (m_wrapped_int));
+    }
+    
+    //getter
+    int get_wrapped_int() const{
+        return m_wrapped_int;
+    }
+    
+    private : 
+        int m_wrapped_int{0};
+};
+
+double sum(double a, double b)
+{
+    return a + b;
+}
+
+int main() 
+{
+    Number n1(22);
+    Number n2(10);
+    
+    double result = sum(static_cast<double>(n1),static_cast<double>(n2));
+    std::cout << "result : " << result <<  std::endl;
+}
+```
+
+
+
 
 
 
