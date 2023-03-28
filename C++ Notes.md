@@ -4256,7 +4256,9 @@ Operator overloading is a compile-time polymorphism. It is an idea of giving spe
 
 ![operatorOverloading](image/operatorOverloading.png)
 
-### Addition Operator as Member
+### Addition Operator 
+
+#### As Member
 
 ```c#
 // Point.h 
@@ -4307,7 +4309,7 @@ int main()
 }
 ```
 
-### Addition Operator as Non-Member
+#### As Non-Member
 
 ```c#
 // Point.h 
@@ -4360,7 +4362,9 @@ int main()
 }
 ```
 
-### Subscript Operator for Reading
+### Subscript Operator 
+
+#### For Reading
 
 ```c#
 // Point.h 
@@ -4415,7 +4419,7 @@ return 0;
 }
 ```
 
-### Subscript Operator for Reading and Writing
+#### For Reading and Writing
 
 > To use the Subscript Operator for Reading and Writing, we just change the operator function to return as reference `&` 
 
@@ -4667,15 +4671,285 @@ int main()
 }
 ```
 
+### Unary Prefix Increment Operator 
+
+#### As Member
+
+```c++
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y)
+        {
+        }
+
+        void operator++() 
+        {
+            ++m_x;
+            ++m_y;
+        }
+
+        ~Point() = default;
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+int main() 
+{
+    Point p1(10,10);
+    p1.operator++();
+    std::cout << "p1 : " << p1 << std::endl; // p1: (11,11)
+}
+```
+
+#### As Non-Member
+
+```c++
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y)
+        {
+        }
+
+        friend void operator++(Point& operand);
+
+        ~Point() = default;
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+inline void operator++(Point& operand)
+{
+	++(operand.m_x);
+	++(operand.m_y);
+}
+
+int main() 
+{
+    Point p1(10,10);
+    ++p1; //operator++(p1);
+    std::cout << "p1 : " << p1 << std::endl; // p1: (11,11)
+}
+```
+
+### Unary Postfix Increment Operator
+
+#### As Member
+
+```c++
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y)
+        {
+        }
+
+        void operator++() 
+        {
+            ++m_x;
+            ++m_y;
+        }
+    
+    	Point operator++(int) // dummy int
+        {
+            Point local_point(*this);
+            ++(*this);
+            return local_point;
+        }
+
+        ~Point() = default;
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+int main() 
+{
+    Point p1(10,10);
+    std::cout << "p1 : " << p1++ << std::endl; // (10,10);
+    std::cout << "p1 : " << p1 << std::endl; // (11,11)
+}
+```
+
+#### As Non-Member
+
+```c++
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y){
+        }
+
+        friend void operator++(Point& operand);
+   	    friend Point operator++(Point& operand,int);
+
+        ~Point() = default;
+
+    private : 
+        double m_x{}; 
+        double m_y{}; 
+};
+
+inline void operator++(Point& operand)
+{
+	++(operand.m_x);
+	++(operand.m_y);
+}
+
+inline Point operator++(Point& operand,int)
+{
+	Point local_point(operand);
+	++operand;
+	return local_point;
+}
+
+int main() 
+{
+    Point p1(10,10);
+    std::cout << "p1 : " << p1++ << std::endl; // (10,10);
+    std::cout << "p1 : " << p1 << std::endl; // (11,11)
+}
+```
+
+### Copy Assignment Operator
+
+Copy constructor and Assignment operator are similar as they are both used to initialize one object using another object. But, there are some basic differences between them:
+
+|                     **Copy constructor**                     |                   **Assignment operator**                    |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+| It is called when a new object is created from an existing object, as a copy of the existing object | This operator is called when an already initialized object is assigned a new value from another existing object. |
+|    It creates a separate memory block for the new object.    | It does not create a separate memory block or new memory space. |
+|               It is an overloaded constructor.               |                  It is a bitwise operator.                   |
+| C++ compiler implicitly provides a copy constructor, if no copy constructor is defined in the class. | A bitwise copy gets created, if the Assignment operator is not overloaded. |
+
+> - If you have no custom copy assignment operator in place, the compiler is going to generate one for you The compiler generated one is going to do member wise copy
+> - The copy assignment operator can only be done as a member function. So C++ does it supports doing this as a non-member.
+> - ![CopyAssignment](image/CopyAssignment.png)
+> - We can use `Copy Assignment` for custom assignments with two objects with different data.
+
+```c++
+#include <iostream>
+class Point
+{
+    public:
+        Point() = default;
+        Point(double x, double y) : 
+            m_x(x), m_y(y)
+        {
+        }
+
+        Point& operator= (const Point& right_operand)
+        {
+            if(this != & right_operand) // check for self assignment 
+            {
+                delete p_data;
+                p_data = new int(*(right_operand.p_data));
+                m_x =  right_operand.m_x;
+                m_y = right_operand.m_y;
+            }
+            return *this;
+		}
+
+        ~Point() = default;
+
+    private : 
+        double m_x{}; 
+		double m_y{}; 
+		int * p_data; 
+};
+
+int main() 
+{
+    Point p1(10,10);
+    Point p1(20,20);
+    std::cout << "p1 : " << p1++ << std::endl; // (10,10)
+    std::cout << "p1 : " << p1 << std::endl; // (20,20)
+    
+    p1 = p2 ;
+    std::cout << "p1 : " << p1++ << std::endl; // (20,20)
+    std::cout << "p1 : " << p1 << std::endl; // (20,20)
+}
+```
+
+### Functors
+
+Objects of a class that overloads the () operator The C++.
+
+```c++
+#include <iostream>
+#include <string>
+
+class Print
+{
+    public : 
+        void operator()(const std::string& name) const
+        {
+            std::cout << "The name is : " << name << std::endl;
+        }
+
+        std::string operator()(const std::string& last_name, const std::string& first_name) const 
+        {
+            return (last_name + " " + first_name);
+        }
+};
+
+void do_something(const Print& printer)
+{
+    printer("Snow");
+}
 
 
+int main()
+{
+    Print print;
+    print("John");
+    do_something(print);
+    std::cout << print("Daniel","Gray") << std::endl;
+   
+    return 0;
+}
+```
 
+## Inheritance
 
+The capability of a `class` to derive properties and characteristics from another class is called `Inheritance`. 
 
+- Inheritance is one of the most important features of Object-Oriented Programming. 
+- Inheritance is a feature or a process in which, new classes are created from the existing classes. 
+- The new class created is called “derived class” or “child class” and the existing class is known as the “base class” or “parent class”. 
+- The derived class now is said to be inherited from the base class.
+- Building types on top of other types.
+- Inheritance hierarchies can be set up to suit your needs.
+- Code reuse is improved.
 
+![Inheritance](image/Inheritance.png)
 
+When we say derived class inherits the base class, it means, the derived class inherits all the properties of the base class, without changing the properties of base class and may add new features to its own. These new features in the derived class will not affect the base class. The derived class is the specialized class for the base class.
 
+- **Sub Class:** The class that inherits properties from another class is called Subclass or Derived Class. 
+- **Super Class:** The class whose properties are inherited by a subclass is called Base Class or Superclass. 
 
+### Why and when to use inheritance 
+
+Consider a group of vehicles. You need to create classes for Bus, Car, and Truck. The methods `fuelAmount()`, `capacity()`, `applyBrakes()` will be the same for all three classes. If we create these classes avoiding inheritance then we have to write all of these functions in each of the three classes.
 
 
 
