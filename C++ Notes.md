@@ -4947,9 +4947,87 @@ When we say derived class inherits the base class, it means, the derived class i
 - **Sub Class:** The class that inherits properties from another class is called Subclass or Derived Class. 
 - **Super Class:** The class whose properties are inherited by a subclass is called Base Class or Superclass. 
 
-### Why and when to use inheritance 
+### Why and When to Use Inheritance 
 
 Consider a group of vehicles. You need to create classes for Bus, Car, and Truck. The methods `fuelAmount()`, `capacity()`, `applyBrakes()` will be the same for all three classes. If we create these classes avoiding inheritance then we have to write all of these functions in each of the three classes.
 
+![inheritanceExample](image/inheritanceExample.png)
 
+This increases the chances of error and data redundancy. To avoid this type of situation, inheritance is used. If we create a class Vehicle and write these three functions in it and inherit the rest of the classes from the vehicle class, then we can simply avoid the duplication of data and increase re-usability. Using inheritance, we have to write the functions only one time instead of three times as we have inherited the rest of the three classes from the base class (Vehicle).
+
+![inheritanceExample2](image/inheritanceExample2.png)
+
+### Inheritance Implementation 
+
+```c++
+class  <derived_class_name> : <access-specifier> <base_class_name>
+{
+        //body
+}
+/*
+* class					— keyword to create a new class
+* derived_class_name	 — name of the new class, which will inherit the base class
+* access-specifier  	 — either of private, public or protected. If neither is specified, PRIVATE is taken as default
+* base-class-name  		 — name of the base class
+*/
+```
+
+> - A derived class doesn’t inherit ***access*** to private data members. However, it does inherit a full parent object, which contains any private members which that class declares.
+> - When a base class is privately inherited by the derived class, public members of the base class becomes the private members of the derived class and therefore, the public members of the base class can only be accessed by the member functions of the derived class. They are inaccessible to the objects of the derived class.
+> - When the base class is publicly inherited by the derived class, public members of the base class also become the public members of the derived class. Therefore, the public members of the base class are accessible by the objects of the derived class as well as by the member functions of the derived class.
+
+### Class  Access Specifier
+
+Access modifiers are used to implement an important aspect of Object-Oriented Programming known as Data Hiding. Access Modifiers or Access Specifiers in a class are used to assign the accessibility to the class members, i.e., they set some restrictions on the class members so that they can’t be directly accessed by the outside functions. There are 3 types of access modifiers available in C++: 
+
+1. **Public**: All the class members declared under the public specifier will be available to everyone. The data members and member functions declared as public can be accessed by other classes and functions too. The public members of a class can be accessed from anywhere in the program using the direct member access operator (.) with the object of that class. 
+2. **Private**: The class members declared as private can be accessed only by the member functions inside the class. They are not allowed to be accessed directly by any object or function outside the class. Only the member functions or the friend functions are allowed to access the private data members of the class. 
+3. **Protected**: The protected access modifier is similar to the private access modifier in the sense that it can’t be accessed outside of its class unless with the help of a friend class. The difference is that the class members declared as Protected can be accessed by any subclass (derived class) of that class as well. 
+
+### Modes of Inheritance
+
+ There are 3 modes of inheritance:
+
+1. **Public Mode**: If we derive a subclass from a public base class. Then the public member of the base class will become public in the derived class and protected members of the base class will become protected in the derived class.
+2. **Protected Mode**: If we derive a subclass from a Protected base class. Then both public members and protected members of the base class will become protected in the derived class.
+3. **Private Mode**: If we derive a subclass from a Private base class. Then both public members and protected members of the base class will become Private in the derived class.
+
+![ModesOfInheritance](image/ModesOfInheritance.png)
+
+> ​    The private members in the base class cannot be directly accessed in the derived class, while protected members can be directly accessed.
+
+```c++
+class A 
+{
+    public:
+        int x;
+    protected:
+        int y;
+    private:
+        int z;
+};
+  
+class B : public A 
+{
+    // x is public
+    // y is protected
+    // z is not accessible from B
+};
+  
+class C : protected A 
+{
+    // x is protected
+    // y is protected
+    // z is not accessible from C
+};
+  
+class D : private A // 'private' is default for classes
+{
+    // x is private
+    // y is private
+    // z is not accessible from D
+};
+```
+
+### Types Of Inheritance
 
