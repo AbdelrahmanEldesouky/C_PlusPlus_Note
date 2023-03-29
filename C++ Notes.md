@@ -5162,3 +5162,108 @@ There's 5 types of inheritance:
 
 #### Single inheritance
 
+In single inheritance, a class is allowed to inherit from only one class. i.e. one subclass is inherited by one base class only.
+
+![single-inheritance](image/single-inheritance.png)
+
+```c++
+class subclass_name : access_mode base_class
+{
+  // body of subclass
+};
+
+// OR
+
+class A
+{ 
+	//... .. ... 
+};
+
+class B: public A
+{
+	//... .. ...
+};
+```
+
+#### Multiple Inheritance
+
+Multiple Inheritance is a feature of C++ where a class can inherit from more than one class. i.e one **subclass** is inherited from more than one **base class**.
+
+
+
+```c++
+// The number of base classes will be separated by a comma (,) and the access mode for every base class must be specified. 
+class subclass_name : access_mode base_class1, access_mode base_class2, ....
+{
+  // body of subclass
+};
+
+// OR
+
+class B
+{ 
+	//... .. ... 
+};
+class C
+{
+	//... .. ...
+};
+class A: public B, public C
+{
+	//... ... ...
+};
+```
+
+> **The diamond problem** The diamond problem occurs when two super classes of a class have a common base class. The solution to this problem is `virtual` keyword to avoid two copies. When we use `virtual` keyword, the default constructor of grandparent class is called by default even if the parent classes explicitly call parameterized constructor. In general, it is not allowed to call the grandparent’s constructor directly, it has to be called through parent class. It is allowed only when `virtual` keyword is used.
+
+####  Multilevel Inheritance
+
+In Multilevel Inheritance, a derived class is created from another derived class.
+
+![multilevel-inheritance](image/multilevel-inheritance.png)
+
+```c++
+class C
+{ 
+	//... .. ... 
+};
+class B:public C
+{
+	//... .. ...
+};
+class A: public B
+{
+	//... ... ...
+};
+```
+
+#### Hierarchical Inheritance
+
+In Hierarchical Inheritance, more than one subclass is inherited from a single base class. i.e. more than one derived class is created from a single base class.
+
+![hierarchical-inheritance](image/hierarchical-inheritance.png)
+
+```c++
+class A  
+{  
+    // body of the class A.  
+}    
+class B : public A   
+{  
+    // body of class B.  
+}  
+class C : public A  
+{  
+    // body of class C.  
+}   
+class D : public A  
+{  
+    // body of class D.  
+}   
+```
+
+#### Hybrid Inheritance 
+
+Hybrid Inheritance is implemented by combining more than one type of inheritance. Like combining **Hierarchical inheritance** and **Multiple Inheritance**. 
+
+![Hybrid-Inheritance](image/Hybrid-Inheritance.png)
