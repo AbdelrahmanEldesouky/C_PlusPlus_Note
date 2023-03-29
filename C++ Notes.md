@@ -4975,6 +4975,7 @@ class  <derived_class_name> : <access-specifier> <base_class_name>
 > - A derived class doesn’t inherit ***access*** to private data members. However, it does inherit a full parent object, which contains any private members which that class declares.
 > - When a base class is privately inherited by the derived class, public members of the base class becomes the private members of the derived class and therefore, the public members of the base class can only be accessed by the member functions of the derived class. They are inaccessible to the objects of the derived class.
 > - When the base class is publicly inherited by the derived class, public members of the base class also become the public members of the derived class. Therefore, the public members of the base class are accessible by the objects of the derived class as well as by the member functions of the derived class.
+> - You can restrict the private member to a more relaxed access level, by using the `using` keyword. If we put them in a public section, they are going to be resurrected with a public access level and they are going to be accessible from inheriting classes, you should know is that you can't resurrect something that is already private. **This not good design** 
 
 ### Class  Access Specifier
 
@@ -5029,5 +5030,135 @@ class D : private A // 'private' is default for classes
 };
 ```
 
+### Constructors with Inheritance
+
+#### Default Constructors with Inheritance
+
+Always provide a default constructor for your classes, especially if they will be part of an inheritance hierarchy. Constructors are going to be called in your inheritance hierarchy, starting from the most basic going down to the most specialized one.
+
+![DefaultConstructorsInheritance](image/DefaultConstructorsInheritance.png)
+
+#### Custom Constructors With Inheritance
+
+![CustomConstructorsInheritance](image/CustomConstructorsInheritance.png)
+
+We have three ways to do this: 
+
+```c++
+/******************* 1. Set the values in the body *******************/
+// BAD : Compiler error - m_address is private to person
+CivilEngineer::CivilEngineer(std::string_view fullname,int age,
+    std::string_view address,int contract_count, std::string_view speciality)
+{
+    m_full_name = fullname;
+    m_age = age;
+    //m_address = address;
+    m_speciality = speciality;
+    std::cout << "Custom constructor called for CivilEnginner ... " << std::endl;
+}
+
+/******************* 2. Set the values with Initializer lists : Doing it wrong *******************/
+// BAD : Compiler error - You can't initialize a member variable that doesn't belong to the class that you are trying to build an object for.
+CivilEngineer::CivilEngineer(std::string_view fullname,int age,
+    std::string_view address,int contract_count, std::string_view speciality)
+    :m_full_name(fullname),m_age(age),m_address(address),m_speciality(speciality)
+{
+    std::cout << "Custom constructor called for CivilEnginner ... " << std::endl;
+}
+
+/******************* 3. Set the values with Initializer lists *******************/
+// We can still use initializer lists, but we are going to use constructors whose job is going to be to initialize these member variables.
+CivilEngineer::CivilEngineer(std::string_view fullname,int age,
+    std::string_view address,int contract_count, std::string_view speciality)
+     : Engineer(fullname,age,address,contract_count), m_speciality(speciality)
+{
+    std::cout << "Custom constructor called for CivilEnginner ... " << std::endl;
+}
+```
+
+#### Copy Constructors With Inheritance
+
+![CopyConstructorsInheritance](image/CopyConstructorsInheritance.png)
+
+```c++
+// Base class copy constructors 
+Person::Person(const Person& source) : m_full_name(source.m_full_name) , m_age(source.m_age), m_address(source.m_address)
+{
+    std::cout << "Custom copy constructor for Person called..." << std::endl;
+}
+
+// Derived class copy constructors 
+// 1. BAD
+Engineer::Engineer(const Engineer& source) : contract_count(source.contract_count)
+{
+    std::cout << "Custom copy constructor for Engineer called..." << std::endl;
+}
+
+// 2. BAD
+Engineer::Engineer(const Engineer& source)
+     : Person(source.m_full_name,source.m_age,source.get_address()) , contract_count(source.contract_count)
+{
+    std::cout << "Custom copy constructor for Engineer called..." << std::endl;
+}
+/* 
+* Not reusing the copy constructor we have in Person
+* m_address is private to Person, can’t be directly accessed from Engineer object
+* We could set up a public method to return the address but that could go against your design guidelines
+*/ 
+
+// 3. GOOD
+Engineer::Engineer(const Engineer& source)
+     : Person(source) , contract_count(source.contract_count)
+{
+    std::cout << "Custom copy constructor for Engineer called..." << std::endl;
+}
+/*
+* The compiler is smart enough to see that we aren't passing an `engineer` object to initialize a person object and what are the * * * * * computers going to do is really smart. Suppose our engineer object is made up of two layers: 
+* - The inner layer is going to be containing the information about the `person`.
+* - The outer layer is going to be containing the `engineer`.
+* So the compiler is going to see that we are passing the `engineer` object to initialize a `person` object and what it is going to do is * really smart. It is going to strip off all of this `engineer` part that we have in our `engineer` object, and we will be just left * * * whether the `person` apart that we pass then to initialize a `person` object.
+*/
+```
+
+#### Inheriting Base Constructors
+
+![InheritingBaseConstructors](image/InheritingBaseConstructors.png)
+
+```c++
+// Using statement : Inherit the constructors
+class Engineer : public Person
+{
+    using Person::Person; // Inheriting constructors
+    // body ...
+}
+// Compiler generated constructor as result of inheritance
+Engineer::Engineer(std::string_view fullname,int age, std::string_view address) : Person(fullname,age,address)
+{
+    std::cout << "generated constructor for Engineer called..." << std::endl;
+}
+```
+
+> - Copy constructors are not inherited. But you won’t usually notice this as the compiler will insert an automatic copy constructor
+> - Inherited constructors are base constructors. They have no knowledge of the derived class. Any member from the derived class will just contain junk or whatever default value it’s initialized with
+> - Constructors are inherited with whatever access specifier they had in base class
+> - On top of derived constructors, you can add your own that possibly properly initialize derived member variables
+> - Inheriting constructors adds a level of confusion to your code, it’s not clear which constructor is building your object. It is recommended to avoid them and only use this feature if no other option is available.
+
+#### Inheritance and Destructors
+
+Base class part of derived object constructed first and destructed last.
+
+![Constructors-and-Destructors-in-Inheritance-in-C](image/Constructors-and-Destructors-in-Inheritance-in-C.webp)
+
 ### Types Of Inheritance
+
+There's 5 types of inheritance: 
+
+1. Single inheritance.
+2. Multilevel inheritance.
+3. Multiple inheritance.
+4. Hierarchical inheritance.
+5. Hybrid inheritance.
+
+#### Single inheritance
 
