@@ -1817,7 +1817,7 @@ int main()
 
 ### Reference vs. Pointer
 
-<img src="/image/ref vs ptr.jpg" alt="ref vs ptr" style="zoom:67%;" />
+<img src="/image/ref-vs-ptr.jpg" alt="ref vs ptr" style="zoom:67%;" />
 
 ### const Reference
 
@@ -5267,3 +5267,4 @@ class D : public A
 Hybrid Inheritance is implemented by combining more than one type of inheritance. Like combining **Hierarchical inheritance** and **Multiple Inheritance**. 
 
 ![Hybrid-Inheritance](image/Hybrid-Inheritance.png)
+
