@@ -5340,3 +5340,382 @@ int main()
 }
 ```
 
+### Exception Cases
+
+#### The automatic local
+
+Variables are destroyed when we are thrown out of a try block
+
+```c++
+int main()
+{
+    //Showing that that automatic local variables are destroyed when 
+    //we are thrown out of a try block
+    int a{10};
+    int b{10};
+
+    try
+    {
+        Item item; // When exception is thrown, control immediately exits the try block
+                    // an automatic local variables are released
+                    // But pointers may leak memory.
+        if( b == 0 )
+            throw 110;
+        a++; // Just using a and b in here, could use them to do anything.
+        b++;
+        std::cout << "Code that executes when things are fine" << std::endl;
+        
+    } 
+    catch(int ex)
+    {
+        std::cout << "Something went wrong. Exception thrown : " << ex <<  std::endl;
+    }
+}
+```
+
+#### Throwing a pointer
+
+Throwing a pointer is a recipe for disaster, as by the time the catch block executes, the memory allocated and used in try block is pointing to invalid data. The program may seem to work sometimes but there are no guarantees you'll always get valid stuff if you dereference pointers allocated in the try block.
+
+```c++
+int main()
+{
+    int c{0};
+    try
+    {
+        int var{55};
+        int* int_ptr = &var;
+        if(c == 0)
+            throw int_ptr; // recipe for disaster
+        std::cout << "Keeping doing some other things..." << std::endl;
+    }
+    catch(int* ex)
+    {
+        std::cout << "Something went wrong. Exception thrown : " <<*ex << std::endl;
+    }
+	std::cout << "END." << std::endl;
+}
+```
+
+#### Potential memory leaks
+
+The destructor for Item is never called when we're thrown out of the try block, and memory is leaked.
+
+```c++
+int main()
+{
+    int d{0};
+    try
+    {
+        Item * item_ptr = new Item(); // Potential memory leaks
+        std::shared_ptr<Item> item_ptr = std::make_shared<Item>(); // Use smart pointer insted
+        if(d == 0)
+            throw 0;
+        std::cout << "Keeping doing some other things..." << std::endl;
+    }
+    catch(int ex)
+    {
+        std::cout << "Something went wrong. Exception thrown : "<< ex << std::endl;
+    }
+	std::cout << "END." << std::endl;
+
+}
+```
+
+#### Thrown Exception
+
+If you throw an exception and it's not handled anywhere in your code, you'll get a hard crash.
+
+```c++
+int main()
+{
+	throw 0;
+	std::cout << "Doing something after we throw" << std::endl;
+	
+	std::cout << "END." << std::endl;
+}
+/* 
+* Output: terminate called after throwing an instance of 'int'
+* 		  Aborted
+*/
+
+```
+
+![exception-termination](image/exception-termination.png)
+
+#### Copyable Object
+
+If copy constructor is either deleted, protected or private, the object can't be thrown as exception. You'll get a compiler error.
+
+```c++
+class MyException{
+public : 
+	MyException() = default;
+	MyException(const MyException & ex) ; // copyable constructor  
+        
+     // compiler error
+	/* MyException(const MyException & ex) = delete; 
+	
+	protected :  
+	MyException(const MyException & ex)
+    {
+    
+    }
+    private :  
+	MyException(const MyException & ex)
+    {
+    
+    }*/
+};
+```
+
+#### Implicit type conversion
+
+Implicit type conversion doesn’t happen for primitive types.
+
+```c++
+#include <iostream>
+using namespace std;
+ 
+int main()
+{
+    try  {
+       throw 'a';
+    }
+    catch (int x)  {
+        cout << "Caught " << x;
+    }
+    catch (...)  {
+        cout << "Default Exception\n";
+    }
+}
+
+/* 
+* Output: Default Exception
+*/ 
+```
+
+#### Multiple catch blocks
+
+Multiple catch blocks it's possible to have multiple catch blocks working with a single try block. The compiler will choose one that matches the thrown type. In this case it's going to discard the double one and see the int catch block and use it. 
+
+```c++
+#include <iostream>
+ 
+int divide_impl( int num, int den){
+ 
+        if( den == 0 )
+            throw -1;
+       return num/den;     
+}
+ 
+void divide(int a, int b){
+    try
+    {
+        auto result = divide_impl(a,b);
+        std::cout << "result : " << result ;
+    }
+    catch(double ex)
+    {
+        std::cout << "handling thrown exception : " << ex ;
+    }
+    catch(int ex){
+        std::cout << "handling thrown exception : " << ex ;
+    }
+}
+ 
+ 
+int main()
+{
+    divide(100,0);
+    return 0;
+}
+```
+
+#### Exceptions as class objects
+
+We can use class objects as exception with inheritance hierarchies.
+
+```c++
+#include <iostream>
+#include <string>
+#include "exceptions.h"
+
+class SomethingIsWrong
+{
+    public : 
+        SomethingIsWrong(const std::string& s) : m_message(s){}
+         ~SomethingIsWrong(){}
+        std::string what()const{return m_message;}
+    protected : 
+        std::string m_message;
+};
+class Warning : public SomethingIsWrong
+{
+    public : 
+    Warning(const std::string& s) : SomethingIsWrong(s){}
+	std::string what()const{return m_message + " Yellow";}
+};
+class SmallError : public Warning
+{
+    public : 
+    SmallError(const std::string& s) : Warning(s){}
+	std::string what()const{return m_message + " Orange";}
+
+};
+class CriticalError : public SmallError
+{
+    public : 
+    CriticalError(const std::string& s) : SmallError(s){}
+	std::string what()const{return m_message + " Red";}
+
+};
+
+void do_something(size_t i)
+{
+      if(i == 2)
+      {
+          throw CriticalError("i is 2");
+      }
+      
+      if(i == 3)
+      {
+          throw SmallError("i is 3");
+      }
+	  
+      if(i == 4)
+      {
+          throw Warning("i is 4");
+      }
+      std::cout << "Doing something at iteration : " << i << std::endl;
+}
+int main()
+{
+   for(size_t i{0}; i < 5 ; ++i)
+   {
+      try
+      {
+          do_something(i);
+      }
+      catch(CriticalError& ex)
+      {
+          std::cout << "CriticalError Exception cought : " << ex.what() << std::endl;
+      }
+      catch(SmallError& ex)
+      {
+          std::cout << "SmallError Exception cought : " << ex.what() << std::endl;
+      }
+      catch(Warning& ex)
+      {
+          std::cout << "Warning Exception cought : " << ex.what() << std::endl;
+      }  
+      catch(SomethingIsWrong& ex)
+      {
+          std::cout << "SomethingIsWrong Exception cought : " << ex.what() << std::endl;
+      }    
+    }
+}
+```
+
+> - The compiler processes catch blocks in order and it will pick the first matching one it hits. Exceptions are part of an inheritance hierarchy, the order of your catch blocks becomes important.
+> - The catch blocks must organized from the most specific to the most general one.
+
+#### Polymorphic Exceptions
+
+We can use Polymorphic Exceptions in our inheritance hierarchies.
+
+```c++
+#include <iostream>
+#include <string>
+#include "exceptions.h"
+
+class SomethingIsWrong
+{
+    public : 
+        SomethingIsWrong(const std::string& s) : m_message(s){}
+         virtual ~SomethingIsWrong(){}
+        virtual std::string what()const{return m_message;}
+    protected : 
+        std::string m_message;
+};
+class Warning : public SomethingIsWrong
+{
+    public : 
+    Warning(const std::string& s) : SomethingIsWrong(s){}
+	virtual std::string what()const override{return m_message + " Yellow";}
+};
+class SmallError : public Warning
+{
+    public : 
+    SmallError(const std::string& s) : Warning(s){}
+	virtual std::string what()const override {return m_message + " Orange";}
+};
+class CriticalError : public SmallError
+{
+    public : 
+    CriticalError(const std::string& s) : SmallError(s){}
+	virtual std::string what()const override {return m_message + " Red";}
+};
+
+void do_something(size_t i)
+{
+      if(i == 2)
+      {
+          throw CriticalError("i is 2");
+      }
+      
+      if(i == 3)
+      {
+          throw SmallError("i is 3");
+      }
+	  
+      if(i == 4)
+      {
+          throw Warning("i is 4");
+      }
+      std::cout << "Doing something at iteration : " << i << std::endl;
+}
+int main()
+{
+   for(size_t i{0}; i < 5 ; ++i)
+   {
+      try
+      {
+          do_something(i);
+      } 
+      catch(SomethingIsWrong& ex)
+      {
+          std::cout << "SomethingIsWrong Exception cought : " << ex.what() << std::endl;
+      }    
+    }
+}
+```
+
+#### Rethrown exceptions
+
+In C++, try/catch blocks can be nested. Also, an exception can be re-thrown using “throw; “. 
+
+```c++
+#include <iostream>
+
+int main()
+{
+	try {
+		try 
+        {
+			throw 20;
+		}
+		catch (int n) 
+        {
+			std::cout << "Handle Partially ";
+			throw; // Re-throwing an exception
+		}
+	}
+	catch (int n) 
+    {
+		std::cout << "Handle remaining ";
+	}
+	return 0;
+}
+```
+
