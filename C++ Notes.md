@@ -5719,3 +5719,20 @@ int main()
 }
 ```
 
+#### `noexcept` Specifier
+
+By declaring a function, a method, or a lambda function as `noexcept`, we specify that these do not throw an exception, and if they throw, we do not care and let the program crash. `throw()` is equivalent to `noexcept(true)` but was deprecated with C++11 and will be removed with C++20. In contrast, `noexcept(false)` means that the function may throw an exception. The `noexcept` specification is part of the function type but can not be used for function overloading. 
+
+> Exceptions can't be propagated out of a `noexcept` function by any means, if you do so the program will terminate, you can also see that the compiler gives you a warning about that.
+
+#### Exceptions in Destructors
+
+Destructor are by default `noexcept`, we do not expect exceptions from them, std::terminate is called in case of exception going out of destructor.
+
+<img src="image/Exception-in-Destructour-1.png" alt="Exception-in-Destructour-1" style="zoom:80%;" /><img src="image/Exception-in-Destructour-2.png" alt="Exception-in-Destructour-2" style="zoom: 80%;" />
+
+### Standard Exceptions
+
+The C++ Standard library provides a base class specifically designed to declare objects to be thrown as exceptions. It is called `std::exception` and is defined in the `<exception>` header. This class has a virtual member function called `what` that returns a null-terminated character sequence (of type `char *`) and that can be overwritten in derived classes to contain some sort of description of the exception.
+
+![cpp-exceptions](image/cpp-exceptions.jpg)
