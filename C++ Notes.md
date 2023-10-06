@@ -1985,7 +1985,12 @@ int main()
 */
 
 /* 
-The output is the same as expected. But, in order to view “Hello !!, GeeksforGeeks” twice the std::string performs overheads on the memory twice. But here the task was to read the string (“Hello !!, GeeksforGeeks”), and no write operation is required on it. So just to display a string why assign memory multiple times. In order to deal with the strings more efficiently, C++17 proposed std::string_view() which provides the view of pre-defined char str[] without creating a new object to the memory. 
+The output is the same as expected. But, in order to view “Hello !!, 
+GeeksforGeeks” twice the std::string performs overheads on the memory twice. 
+But here the task was to read the string (“Hello !!, GeeksforGeeks”), 
+and no write operation is required on it. So just to display a string why assign memory multiple times.
+In order to deal with the strings more efficiently, C++17 proposed 
+std::string_view() which provides the view of pre-defined char str[] without creating a new object to the memory. 
 */ 
 ```
 
