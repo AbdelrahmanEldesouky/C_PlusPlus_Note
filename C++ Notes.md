@@ -2478,7 +2478,7 @@ A mechanism to set up anonymous functions (without names). Once we have them set
 };
 
 // Assigning
-auto Call_Name [ capture clause ] (parameters) -> return-type  
+auto Call_Name = [ capture clause ] (parameters) -> return-type  
 {   
    definition of method   
 };
