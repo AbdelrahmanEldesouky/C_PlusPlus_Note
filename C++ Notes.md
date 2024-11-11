@@ -5741,3 +5741,16 @@ Destructor are by default `noexcept`, we do not expect exceptions from them, std
 The C++ Standard library provides a base class specifically designed to declare objects to be thrown as exceptions. It is called `std::exception` and is defined in the `<exception>` header. This class has a virtual member function called `what` that returns a null-terminated character sequence (of type `char *`) and that can be overwritten in derived classes to contain some sort of description of the exception.
 
 ![cpp-exceptions](image/cpp-exceptions.jpg)
+
+*****
+## Polymorphism
+## Class Template
+## Move Semantics
+## Function Like Entities
+## STL
+### STL Containers
+### STL Iterators
+### STL Algorithm
+## C++20 Ranges
+## C++20 Coroutines
+## C++20 Modules
