@@ -5744,6 +5744,7 @@ The C++ Standard library provides a base class specifically designed to declare 
 
 *****
 ## Polymorphism
+## Type Casting
 ## Class Template
 ## Move Semantics
 ## Function Like Entities
